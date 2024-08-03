@@ -1,0 +1,50 @@
+version: '3'
+services:
+  postgres:
+    container_name: postgres
+    image: 'postgres:15.1-alpine'
+    volumes:
+      - ./data/db:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+    ports:
+      - '6000:5432'
+    networks:
+      - backend
+    restart: always
+
+  parse-server:
+    container_name: parse-server
+    image: parseplatform/parse-server
+    env_file:
+      - ./.env
+    ports:
+      - '9000:1337'
+    depends_on:
+      - postgres
+    networks:
+      - backend
+    links:
+      - postgres
+    restart: always
+
+  parse-dashboard:
+    container_name: parse-dashboard
+    image: parseplatform/parse-dashboard
+    env_file:
+      - ./.env
+    command: --dev
+    ports:
+      - 5000:4040
+    depends_on:
+      - parse-server
+    networks:
+      - backend
+
+networks:
+  backend:
+    name: backend
+    driver: bridge
+volumes:
+  data:
+    driver: local
